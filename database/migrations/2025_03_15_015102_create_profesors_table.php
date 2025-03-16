@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('grado_id')->constrained()->onDelete('cascade');
             $table->integer('edad');
             $table->integer('sexo');
-            $table->integer('titulo');
+            $table->string('titulo');
             $table->timestamps();
         });
     }

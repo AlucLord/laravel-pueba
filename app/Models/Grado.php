@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Grado extends Model
 {
-    protected $fillable = ['nombre']; // Agrega los campos permitidos
+    protected $fillable = ['nombre'];
 
     // Relación con Alumno (un grado tiene muchos alumnos)
     public function alumnos()

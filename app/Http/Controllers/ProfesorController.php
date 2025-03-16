@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Profesor;
-
+use App\Models\Grado;
 
 class ProfesorController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Lista de profesores.
      */
     public function index()
     {
@@ -18,63 +18,71 @@ class ProfesorController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Formulario para crear un nuevo profesor.
      */
     public function create()
     {
-        //
+        $grados = Grado::all();
+        return view('profesores.create', compact('grados'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Guarda un nuevo profesor en la base de datos.
      */
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'required',
-            'apellidos' => 'required',
+            'nombre' => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
             'grado_id' => 'required|exists:grados,id',
-            'edad' => 'required|integer',
-            'sexo' => 'required',
-            'titulo' => 'required'
+            'edad' => 'required|integer|min:18',
+            'sexo' => 'required|integer',
+            'titulo' => 'required|string|max:255',
         ]);
 
-        $profesor = Profesor::create($request->all());
-        return response()->json($profesor, 201);
+        Profesor::create($request->all());
+
+        return redirect()->route('profesores.index')->with('success', 'Profesor agregado correctamente.');
     }
 
     /**
-     * Display the specified resource.
+     * Formulario para editar un profesor.
      */
-    public function show(string $id)
-    {
-        return response()->json(Profesor::with('grado')->findOrFail($id));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function edit($id)
     {
         $profesor = Profesor::findOrFail($id);
-        $profesor->update($request->all());
-        return response()->json($profesor);
+        $grados = Grado::all();
+        return view('profesores.edit', compact('profesor', 'grados'));
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Actualiza un profesor en la base de datos.
      */
-    public function destroy(string $id)
+    public function update(Request $request, $id)
     {
-        Profesor::destroy($id);
-        return response()->json(['message' => 'Profesor eliminado']);
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
+            'grado_id' => 'required|exists:grados,id',
+            'edad' => 'required|integer|min:18',
+            'sexo' => 'required|integer',
+            'titulo' => 'required|string|max:255',
+        ]);
+
+        $profesor = Profesor::findOrFail($id);
+        $profesor->update($request->all());
+
+        return redirect()->route('profesores.index')->with('success', 'Profesor actualizado correctamente.');
+    }
+
+    /**
+     * Elimina un profesor de la base de datos.
+     */
+    public function destroy($id)
+    {
+        $profesor = Profesor::findOrFail($id);
+        $profesor->delete();
+
+        return redirect()->route('profesores.index')->with('success', 'Profesor eliminado correctamente.');
     }
 }

@@ -12,10 +12,7 @@ Route::get('/', function () {
 })->name('home');
 
 //Ruta para exportar
-Route::get('/exportar-alumnos', function (){
-    $export=new AlumnosExport();
-    return $export->export();
-})->name('alumnos.export');
+Route::get('/alumnos/reporte', [AlumnoController::class, 'export'])->name('alumnos.report');
 
 // Verificar si los controladores existen antes de definir rutas
 if (class_exists(GradoController::class)) {

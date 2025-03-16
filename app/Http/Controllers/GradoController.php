@@ -8,7 +8,7 @@ use App\Models\Grado;
 class GradoController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Lista de grados.
      */
     public function index()
     {
@@ -17,58 +17,59 @@ class GradoController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Formulario para crear un nuevo grado.
      */
     public function create()
     {
-        //
+        return view('grados.create');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Guarda un nuevo grado en la base de datos.
      */
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'require|unique:grados'
+            'nombre' => 'required|string|max:255',
         ]);
 
-        $grado = Grado::create($request->all());
-        return response()->json($grado, 201);
+        Grado::create($request->all());
+
+        return redirect()->route('grados.index')->with('success', 'Grado agregado correctamente.');
     }
 
     /**
-     * Display the specified resource.
+     * Formulario para editar un grado.
      */
-    public function show(string $id)
-    {
-        return response()->json(Grado::findOrFail($id));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function edit($id)
     {
         $grado = Grado::findOrFail($id);
-        $grado->update($request->all());
-        return response()->json($grado);
+        return view('grados.edit', compact('grado'));
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Actualiza un grado en la base de datos.
      */
-    public function destroy(string $id)
+    public function update(Request $request, $id)
     {
-        Grado::destroy($id);
-        return response()->json(['message' => 'Grado eliminado']);
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+        ]);
+
+        $grado = Grado::findOrFail($id);
+        $grado->update($request->all());
+
+        return redirect()->route('grados.index')->with('success', 'Grado actualizado correctamente.');
+    }
+
+    /**
+     * Elimina un grado de la base de datos.
+     */
+    public function destroy($id)
+    {
+        $grado = Grado::findOrFail($id);
+        $grado->delete();
+
+        return redirect()->route('grados.index')->with('success', 'Grado eliminado correctamente.');
     }
 }

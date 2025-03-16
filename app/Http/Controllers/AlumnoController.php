@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Alumno;
 use App\Models\Grado;
-use Nette\Utils\Floats;
-use App\Http\Controllers\QueryException;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AlumnoController extends Controller
 {
     /**
-     * Muestra la lista de alumnos.
+     * Lista de alumnos.
      */
     public function index()
     {
@@ -20,7 +22,7 @@ class AlumnoController extends Controller
     }
 
     /**
-     * Muestra el formulario para crear un nuevo alumno.
+     * Formulario para crear un nuevo alumno.
      */
     public function create()
     {
@@ -75,7 +77,7 @@ class AlumnoController extends Controller
             'nombre_padre' => 'required',
             'nombre_madre' => 'required',
             'edad' => 'required|integer|min:3',
-            'nota_final' => 'required|numeric|min:0|max:10',
+            'nota_final' => 'required|numeric|min:0|max:10.00',
         ]);
 
         $alumno = Alumno::findOrFail($id);
@@ -90,5 +92,64 @@ class AlumnoController extends Controller
         $alumno->delete();
 
         return redirect()->route('alumnos.index')->with('success', 'Alumno eliminado correctamente');
+    }
+
+    public function export()
+    {
+        // Crear hoja de cálculo
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Definir encabezados
+        $headers = ['ID', 'Nombre', 'Apellido', 'Carnet', 'Grado', 'Edad', 'Nota Final', 'Nombre Padre', 'Nombre Madre'];
+        $sheet->fromArray([$headers], null, 'A1');
+
+        // Obtener datos
+        $alumnos = DB::table('alumnos')
+            ->join('grados', 'alumnos.grado_id', '=', 'grados.id')
+            ->select(
+                'alumnos.id', 
+                'alumnos.nombre', 
+                'alumnos.apellido', 
+                'alumnos.n_carnet', 
+                'grados.nombre as grado', 
+                'alumnos.edad',
+                'alumnos.nota_final',
+                'alumnos.nombre_padre',
+                'alumnos.nombre_madre',
+                )
+            ->get();
+
+        // Insertar datos en filas
+        $row = 2;
+        foreach ($alumnos as $alumno) {
+            $sheet->fromArray([
+                [
+                    $alumno->id, 
+                    $alumno->nombre, 
+                    $alumno->apellido, 
+                    $alumno->n_carnet, 
+                    $alumno->grado, 
+                    $alumno->edad,
+                    $alumno->nota_final,
+                    $alumno->nombre_padre,
+                    $alumno->nombre_madre,
+                ]
+            ], null, "A$row");
+            $row++;
+        }
+
+        // Crear la respuesta de descarga
+        $response = new StreamedResponse(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        });
+
+        // Configurar encabezados para la descarga
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', 'attachment;filename="reporte_alumnos.xlsx"');
+        $response->headers->set('Cache-Control', 'max-age=0');
+
+        return $response;
     }
 }

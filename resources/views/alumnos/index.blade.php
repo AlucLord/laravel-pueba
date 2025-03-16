@@ -4,6 +4,11 @@
     <div class="container">
         <h2 class="mb-4">Lista de Alumnos</h2>
         <a href="{{ route('alumnos.create') }}" class="btn btn-warning mb-3">Agregar Nuevo Alumno</a>
+
+        @if (session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -12,7 +17,6 @@
                     <th>Apellidos</th>
                     <th>N° Carnet</th>
                     <th>Grado</th>
-                    <th>Nota Final</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -21,16 +25,17 @@
                     <tr>
                         <td>{{ $alumno->id }}</td>
                         <td>{{ $alumno->nombre }}</td>
-                        <td>{{ $alumno->apellidos }}</td>
+                        <td>{{ $alumno->apellido }}</td>
                         <td>{{ $alumno->n_carnet }}</td>
-                        <td>{{ $alumno->grado->nombre }}</td>
-                        <td>{{ $alumno->nota_final }}</td>
+                        <td>{{ $alumno->grado->nombre ?? 'Sin asignar' }}</td>
                         <td>
-                            <a href="{{ route('alumnos.edit', $alumno->id) }}" class="btn btn-sm btn-warning">Editar</a>
+                            <a href="{{ route('alumnos.edit', $alumno->id) }}" class="btn btn-warning btn-sm">Editar</a>
+
                             <form action="{{ route('alumnos.destroy', $alumno->id) }}" method="POST" style="display:inline;">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-danger"
-                                    onclick="return confirm('¿Eliminar este alumno?')">Eliminar</button>
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('¿Seguro que deseas eliminar este alumno?');">Eliminar</button>
                             </form>
                         </td>
                     </tr>
